@@ -29,7 +29,7 @@ public class SetJspClaz {
         System.out.println(title);
     }
 
-    public void loadInFle() throws IOException {
+    public void buildSocialJsp() throws IOException {
         File input = new File(FileUtils.getResources(), "/jsp/socialDetails.jsp");
         
         Document doc = Jsoup.parse(input, "UTF-8");
@@ -47,7 +47,7 @@ public class SetJspClaz {
             }
 
             Element valueNode = titleNode.nextElementSibling();
-            titleNode.addClass(getBuildClaz(valueNode.text()));
+            titleNode.addClass(getBuildClaz(valueNode.text(), "[a-zA-Z]+[.]{1}[a-zA-Z]+[.]{1}[a-zA-Z]+"));
         }
 
         doc.select("#socialDetailTmpl").html(jsRenderDoc.body().html());
@@ -56,27 +56,59 @@ public class SetJspClaz {
         docHtml = docHtml.replaceAll("&gt;", ">");
         // System.out.println(doc.html());
 
-        FileUtils.saveFileInResources("/jsp/build/socialDetails.4.jsp", docHtml);
+        FileUtils.saveFileInResources("/jsp/socialDetails.4.jsp", docHtml);
+    }
+    
+    public void buildOwnJsp() throws IOException {
+        File input = new File(FileUtils.getResources(), "/jsp/approvalDtl.jsp");
+        
+        Document doc = Jsoup.parse(input, "UTF-8");
+        String docHtml = doc.html().replaceAll("<%", "<!");
+        docHtml = docHtml.replaceAll("%>", ">");
+        doc.html(docHtml);
+        
+        FileUtils.saveFileInResources("/jsp/approvalDtl.0.jsp", doc.html());
+        Document jsRenderDoc = Jsoup.parse(doc.select("#taskDetailTmpl").html(), "UTF-8");
+
+        Elements titleNodes = jsRenderDoc.select("ul li p.word");
+        for (Element titleNode : titleNodes) {
+            if (titleNode.classNames().size() > 1) {
+                // System.out.println(titleNode.text());
+                continue;
+            }
+
+            Element valueNode = titleNode.nextElementSibling();
+            titleNode.addClass(getBuildClaz(valueNode.text(), "[a-zA-Z]+[.]{1}[a-zA-Z]+"));
+        }
+
+        doc.select("#taskDetailTmpl").html(jsRenderDoc.body().html());
+        docHtml = doc.html();
+        docHtml = docHtml.replaceAll("&lt;", "<");
+        docHtml = docHtml.replaceAll("&gt;", ">");
+        // System.out.println(doc.html());
+
+        FileUtils.saveFileInResources("/jsp/approvalDtl.1.jsp", docHtml);
     }
 
-    public static String getBuildClaz(String text) {
+    public static String getBuildClaz(String text, String regex) {
         String clazs = "";
 
-        String s = "[a-zA-Z]+[.]{1}[a-zA-Z]+[.]{1}[a-zA-Z]+";
-        Pattern pattern = Pattern.compile(s);
+        Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(text);
 
         while (matcher.find()) {
             clazs += " " + matcher.group();
         }
-
+        
         clazs = clazs.replaceAll("[.]{1}", "-");
         return clazs;
     }
 
     public static void main(String[] args) {
         try {
-            new SetJspClaz().loadInFle();
+            SetJspClaz utils = new SetJspClaz();
+            utils.buildOwnJsp();
+            utils.buildSocialJsp();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
